@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Generator and Moderator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Content Generator and Moderator</h1>
+
+        <div class="section">
+            <h2>Generate Content</h2>
+            <input type="text" id="prompt" placeholder="Enter your prompt">
+            <input type="text" id="interests" placeholder="Enter interests (comma-separated)">
+            <button onclick="generateContent()">Generate</button>
+            <div id="generatedContent"></div>
+        </div>
+
+        <div class="section">
+            <h2>Moderate Content</h2>
+            <textarea id="contentToModerate" placeholder="Enter content to moderate"></textarea>
+            <button onclick="moderateContent()">Moderate</button>
+            <div id="moderationResult"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
