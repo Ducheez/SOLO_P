@@ -16,7 +16,7 @@ function showLoading(elementId) {
   
       try {
           console.log("Sending generate request with:", { prompt, interests });
-          const response = await fetch('/api/generate', {
+          const response = await fetch('http://localhost:3000/api/generate', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ function showLoading(elementId) {
   
       try {
           console.log("Sending moderation request with:", { content });
-          const response = await fetch('/api/moderate', {
+          const response = await fetch('http://localhost:3000/api/moderate', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
