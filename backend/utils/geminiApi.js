@@ -1,77 +1,98 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const contentFilter = require('./contentFilter');
+// backend/utils/geminiApi.js
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const API_KEY = process.env.GEMINI_API_KEY;
+console.log("API Key:", API_KEY ? "Set" : "Not set");
+
+if (!API_KEY) {
+  console.error("GEMINI_API_KEY is not set in the environment variables!");
+}
+
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 exports.generate = async (prompt, interests) => {
   try {
+    console.log("Generating content for prompt:", prompt);
+    console.log("Interests:", interests);
+
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(
-      `Generate content based on the following prompt: "${prompt}". Consider these interests: ${interests.join(', ')}.`
-    );
+    const result = await model.generateContent(`
+      Generate a blog post based on the following prompt and interests:
+      Prompt: ${prompt}
+      Interests: ${interests.join(', ')}
+      
+      Please format the content with appropriate headings (using # for main headings and ## for subheadings) and paragraphs.
+    `);
+    
+    console.log("Generation successful");
     return result.response.text();
   } catch (error) {
-    console.error('Error generating content with Gemini:', error);
-    throw error;
-  }
-};
-
-exports.moderate = async (content) => {
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const filterResult = contentFilter.filterContent(content);
-
-    console.log('Filtered Content:', filterResult.filteredContent);
-
-    const result = await model.generateContent(
-      `Moderate the following content and determine if it's appropriate. 
-       Provide a detailed explanation of your decision.
-       Respond with a JSON object containing 'isFlagged' (boolean), 'explanation' (string), and 'reasoning' (string).
-       Content: "${filterResult.filteredContent}"`
-    );
-
-    let aiModerationText = await result.response.text();
-    console.log('AI Moderation Response:', aiModerationText);
-
-    // Clean the AI response
-    aiModerationText = aiModerationText.replace(/```[\s\S]*?```/g, '').replace(/```/g, '').trim();
-    console.log('Cleaned AI Moderation Response:', aiModerationText);
-
-    let aiModeration;
-    try {
-      aiModeration = JSON.parse(aiModerationText);
-    } catch (parseError) {
-      console.error('Error parsing AI moderation response:', parseError);
-      throw new Error('Failed to parse AI moderation response');
+    console.error('Error generating content:', error);
+    if (error.response) {
+      console.error('API response:', error.response);
     }
-
-    return {
-      isFlagged: aiModeration.isFlagged || filterResult.hasProfanity,
-      explanation: aiModeration.explanation || (filterResult.hasProfanity ? "Contains profanity" : ""),
-      reasoning: aiModeration.reasoning,
-      hasProfanity: filterResult.hasProfanity
-    };
-  } catch (error) {
-    console.error('Error moderating content:', error);
-    return {
-      isFlagged: false,
-      explanation: "Error occurred during moderation. Please review manually.",
-      reasoning: "An error occurred in the moderation process.",
-      hasProfanity: false
-    };
+    throw new Error(`Failed to generate content: ${error.message}`);
   }
 };
 
 exports.summarize = async (content) => {
   try {
+    console.log("Summarizing content...");
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(
-      `Summarize the following content in a concise manner:
-       "${content}"`
-    );
+    const result = await model.generateContent(`
+      Summarize the following content in 2-3 sentences:
+      ${content}
+    `);
+    console.log("Summary generation successful");
     return result.response.text();
   } catch (error) {
     console.error('Error summarizing content:', error);
-    throw error;
+    if (error.response) {
+      console.error('API response:', error.response);
+    }
+    throw new Error(`Failed to summarize content: ${error.message}`);
+  }
+};
+
+exports.moderate = async (content) => {
+  try {
+    console.log("Moderating content...");
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    const result = await model.generateContent(`
+      You are a content moderator. Your task is to determine if the following content is appropriate or inappropriate.
+      
+      Respond with a JSON object containing 'isFlagged' (boolean) and 'explanation' (string).
+      If the content contains any profanity, explicit content, hate speech, or offensive language, flag it as inappropriate.
+      Be strict in your moderation. When in doubt, flag the content.
+      
+      Content to moderate: "${content}"
+      
+      Respond only with a JSON object in this format:
+      {
+        "isFlagged": boolean,
+        "explanation": "Your explanation here"
+      }
+    `);
+    
+    const responseText = result.response.text();
+    console.log("Moderation response:", responseText);
+    
+    try {
+      return JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Error parsing JSON response:", parseError);
+      
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("Invalid response format from Gemini API");
+      }
+    }
+  } catch (error) {
+    console.error('Error moderating content with Gemini:', error);
+    throw new Error(`Failed to moderate content: ${error.message}`);
   }
 };

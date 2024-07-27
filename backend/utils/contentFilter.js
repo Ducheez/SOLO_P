@@ -1,4 +1,6 @@
-const profanityList = ['shit', 'fuck', 'ass', 'damn', 'bitch']; // Expand this list as needed
+// backend/utils/contentFilter.js
+
+const profanityList = ['shit', 'fuck', 'ass', 'damn', 'bitch', 'crap', 'piss', 'dick', 'cock', 'pussy', 'asshole', 'fag', 'bastard', 'slut', 'douche'];
 
 function containsProfanity(text) {
   const lowerText = text.toLowerCase();
@@ -6,8 +8,7 @@ function containsProfanity(text) {
 }
 
 exports.filterContent = (content) => {
-  return {
-    hasProfanity: containsProfanity(content),
-    filteredContent: content.replace(new RegExp(`\\b(${profanityList.join('|')})\\b`, 'gi'), '****')
-  };
+  const hasProfanity = containsProfanity(content);
+  const filteredContent = content.replace(new RegExp(`\\b(${profanityList.join('|')})\\b`, 'gi'), match => '*'.repeat(match.length));
+  return { hasProfanity, filteredContent };
 };
