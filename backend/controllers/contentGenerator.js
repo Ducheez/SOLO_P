@@ -1,22 +1,35 @@
-// backend/controllers/contentGenerator.js
-
 const geminiApi = require('../utils/geminiApi');
+const languageUtils = require('../utils/languageUtils');
 
 exports.generateContent = async (req, res) => {
   try {
-    const { prompt, interests } = req.body;
-    console.log("Received request to generate content:", { prompt, interests });
+    const { prompt, interests, targetLanguage } = req.body;
+    console.log("Received request to generate content:", { prompt, interests, targetLanguage });
 
-    const generatedContent = await geminiApi.generate(prompt, interests);
+    const detectedLanguage = languageUtils.detectLanguage(prompt);
+
+    const translatedPrompt = detectedLanguage !== 'en' 
+      ? await languageUtils.translateToEnglish(prompt)
+      : prompt;
+
+    const generatedContent = await geminiApi.generate(translatedPrompt, interests);
     console.log("Content generated, now summarizing...");
-    
+
     const summary = await geminiApi.summarize(generatedContent);
     console.log("Summary created, now formatting content...");
 
     const formattedContent = formatContent(generatedContent);
 
+    const translatedContent = targetLanguage && targetLanguage !== 'en'
+      ? await languageUtils.translateFromEnglish(formattedContent, targetLanguage)
+      : formattedContent;
+
+    const translatedSummary = targetLanguage && targetLanguage !== 'en'
+      ? await languageUtils.translateFromEnglish(summary, targetLanguage)
+      : summary;
+
     console.log("Content generation process completed successfully");
-    res.json({ content: formattedContent, summary });
+    res.json({ content: translatedContent, summary: translatedSummary });
   } catch (error) {
     console.error('Error in generateContent:', error);
     res.status(500).json({ error: `Failed to generate content: ${error.message}` });

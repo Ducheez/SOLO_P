@@ -3,7 +3,7 @@ body {
     line-height: 1.6;
     margin: 0;
     padding: 20px;
-    background-image: url('pexels-billow926-2948812-5338279.jpg'); 
+    background-image: url('pexels-billow926-2948812-5338279.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -12,7 +12,7 @@ body {
 .container {
     max-width: 800px;
     margin: auto;
-    background: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+    background: rgba(255, 255, 255, 0.8);
     padding: 20px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -21,6 +21,12 @@ body {
 h1 {
     text-align: center;
     color: #333;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 20px;
 }
 
 .section {
@@ -33,8 +39,8 @@ textarea, input {
     margin-bottom: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
-    color: #333; /* Text color to ensure visibility */
+    background: rgba(255, 255, 255, 0.8);
+    color: #333;
 }
 
 button {
@@ -57,12 +63,28 @@ button:hover {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
-    color: #333; /* Text color to ensure visibility */
+    background: rgba(255, 255, 255, 0.8);
+    color: #333;
 }
 
 .loading {
     text-align: center;
     font-style: italic;
     color: #888;
+}
+
+.language-info {
+    margin-bottom: 10px;
+    font-style: italic;
+    color: #555;
+}
+
+.language-select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #333;
 }

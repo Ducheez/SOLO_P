@@ -1,35 +1,42 @@
-// backend/controllers/contentModerator.js
 const geminiApi = require('../utils/geminiApi');
 const contentFilter = require('../utils/contentFilter');
+const languageUtils = require('../utils/languageUtils');
 
 exports.moderateContent = async (req, res) => {
   try {
-    const { content } = req.body;
-    
-    // First, use the local content filter
-    const localFilterResult = contentFilter.filterContent(content);
-    
+    const { content, targetLanguage } = req.body;
+
+    const detectedLanguage = languageUtils.detectLanguage(content);
+
+    const translatedContent = detectedLanguage !== 'en' 
+      ? await languageUtils.translateToEnglish(content)
+      : content;
+
+    const localFilterResult = contentFilter.filterContent(translatedContent);
+
     let moderationResult = {
       isFlagged: localFilterResult.hasProfanity,
-      explanation: localFilterResult.hasProfanity 
+      explanation: localFilterResult.hasProfanity
         ? "Content contains profanity and has been flagged as inappropriate."
         : "Content appears to be appropriate.",
       hasProfanity: localFilterResult.hasProfanity,
       filteredContent: localFilterResult.filteredContent
     };
 
-    // Only use Gemini API if local filter doesn't flag the content
     if (!localFilterResult.hasProfanity) {
       try {
-        const geminiModeration = await geminiApi.moderate(content);
+        const geminiModeration = await geminiApi.moderate(translatedContent);
         if (geminiModeration.isFlagged) {
           moderationResult.isFlagged = true;
           moderationResult.explanation = geminiModeration.explanation;
         }
       } catch (error) {
         console.error('Error with Gemini API moderation:', error);
-        // If Gemini API fails, we'll stick with the local filter results
       }
+    }
+
+    if (targetLanguage && targetLanguage !== 'en') {
+      moderationResult.explanation = await languageUtils.translateFromEnglish(moderationResult.explanation, targetLanguage);
     }
 
     res.json(moderationResult);
